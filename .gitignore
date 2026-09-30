@@ -10,3 +10,4 @@ brag-output/work/t2.txt
 __pycache__/
 brag-output/work/audio/
 *.mp4
+brag-output/work/check*.jpg
