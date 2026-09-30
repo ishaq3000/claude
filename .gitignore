@@ -9,3 +9,4 @@ brag-output/work/stilltimes.txt
 brag-output/work/t2.txt
 __pycache__/
 brag-output/work/audio/
+*.mp4

@@ -241,10 +241,10 @@ const BUILD = {
     const vs = el('div', 'abs h1 tc', 'VS', root, 'left:860px;top:430px;width:200px;height:200px;border-radius:50%;font-size:92px;line-height:200px;background:radial-gradient(circle,#1b2436,#0c111b);border:3px solid rgba(255,255,255,.18);box-shadow:0 0 80px rgba(255,255,255,.12)');
     const tj = el('div', 'abs h1 j', 'JACKERY<br>EXPLORER 300', root, 'left:120px;top:130px;font-size:74px;line-height:1');
     const ta = el('div', 'abs h1 a', 'ANKER SOLIX<br>C300 DC', root, 'right:120px;top:130px;font-size:74px;line-height:1;text-align:right');
-    const nj = el('div', 'abs num j', '293 Wh', root, 'left:300px;top:720px;font-size:64px');
-    const na = el('div', 'abs num a', '288 Wh', root, 'left:1480px;top:720px;font-size:64px');
-    const cj = el('div', 'abs chip', `${icon('plug', 34, 'var(--j)')} Real AC outlets`, root, 'left:285px;top:810px');
-    const ca = el('div', 'abs chip', `${icon('usbc', 34, 'var(--a)')} USB-C first · LiFePO4`, root, 'left:1385px;top:810px');
+    const nj = el('div', 'abs num j', '293 Wh', root, 'left:300px;top:748px;font-size:64px');
+    const na = el('div', 'abs num a', '288 Wh', root, 'left:1480px;top:748px;font-size:64px');
+    const cj = el('div', 'abs chip', `${icon('plug', 34, 'var(--j)')} Real AC outlets`, root, 'left:285px;top:838px');
+    const ca = el('div', 'abs chip', `${icon('usbc', 34, 'var(--a)')} USB-C first · LiFePO4`, root, 'left:1385px;top:838px');
     const ten = el('div', 'abs chip', '10 ROUNDS · 1 WINNER', root, 'left:50%;top:680px;font-size:24px;letter-spacing:.14em');
     return t => {
       const pj = back(P(t, .1, .9)), pa = back(P(t, .25, .9));
@@ -689,7 +689,7 @@ function init(timeline) {
   });
 }
 let cur = -1;
-function renderAt(t) {
+function renderAt(t, poster = false) {
   drawBg(t);
   let i = SC.findIndex(s => t >= s.sc.start && t < s.sc.start + s.sc.dur);
   if (i < 0) i = t < 0 ? 0 : SC.length - 1;
@@ -702,7 +702,7 @@ function renderAt(t) {
   // Captions
   const c = caps.find(c => lt >= c.start - .05 && lt < c.end + .25);
   const capEl = $('#cap');
-  capEl.style.opacity = c ? 1 : 0;
+  capEl.style.opacity = c && !poster ? 1 : 0;
   if (c && capEl.textContent !== c.text) capEl.textContent = c.text;
   // HUD: round dots + live score
   let sj = 0, sa = 0, curRound = 0;

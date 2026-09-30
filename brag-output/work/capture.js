@@ -10,10 +10,10 @@ const { chromium } = require('playwright-core');
 
 const ROOT = __dirname;
 const FPS = 30;
-const POSTER_T = Number(process.env.POSTER_T || 6.0);
 const FFMPEG = execFileSync('python3', ['-c', 'import imageio_ffmpeg;print(imageio_ffmpeg.get_ffmpeg_exe())']).toString().trim();
 const EXE = '/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell';
 const TL = JSON.parse(fs.readFileSync(path.join(ROOT, 'timeline.json'), 'utf8'));
+const POSTER_T = Number(process.env.POSTER_T || (TL.scenes[0].start + TL.scenes[0].dur - 1.5));
 const MIME = { '.html': 'text/html', '.ttf': 'font/ttf', '.js': 'text/javascript', '.json': 'application/json' };
 
 function serve() {
@@ -42,7 +42,7 @@ async function stills(times) {
   const page = await openPage(browser, srv.address().port);
   fs.mkdirSync(path.join(ROOT, 'stills'), { recursive: true });
   for (const t of times) {
-    await page.evaluate(t => renderAt(t), t);
+    await page.evaluate(([t, p]) => renderAt(t, p), [t, t === POSTER_T]);
     await page.screenshot({ path: path.join(ROOT, 'stills', `${String(t).padStart(6, '0')}.jpg`), type: 'jpeg', quality: 85 });
   }
   await browser.close(); srv.close();
@@ -64,7 +64,7 @@ async function video(workers) {
       '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-pix_fmt', 'yuv420p', '-r', String(FPS), path.join(dir, `c${String(w).padStart(2, '0')}.mp4`)],
       { stdio: ['pipe', 'inherit', 'inherit'] });
     for (let f = a; f < b; f++) {
-      await page.evaluate(t => renderAt(t), f === 0 ? POSTER_T : f / FPS);
+      await page.evaluate(([t, p]) => renderAt(t, p), [f === 0 ? POSTER_T : f / FPS, f === 0]);
       const buf = await page.screenshot({ type: 'jpeg', quality: 92 });
       if (!ff.stdin.write(buf)) await new Promise(r => ff.stdin.once('drain', r));
       if (++done % 300 === 0) {
