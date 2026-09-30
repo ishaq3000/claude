@@ -1,0 +1,257 @@
+"""Narration and on-screen data: Jackery Explorer 300 vs Anker SOLIX C300 DC.
+
+Products (from the Amazon links supplied):
+  Jackery Explorer 300 ........ B082TMBYR6
+  Anker SOLIX C300 DC ......... B0D62PMB3R  (DC-only model: no AC outlets)
+
+Specs are the manufacturers' published figures as reported by retail listings
+and reviews. Runtime figures are estimates and are labelled that way on screen.
+
+Run `python3 script.py` to write scenes.json, which tts.py and the page read.
+"""
+import json
+import pathlib
+
+SCENES = [
+    dict(
+        id="intro", kind="intro",
+        text=(
+            "Two compact power stations. Almost the same capacity. Completely "
+            "different ideas about what portable power should be. On one side, "
+            "the Jackery Explorer 300, the classic grab-and-go power box with "
+            "real AC outlets. On the other, the Anker SOLIX C300 DC, a tiny, "
+            "USB-C-first power bank station with a long-life battery. Ten "
+            "rounds, head to head. By the end, you will know exactly which one "
+            "belongs in your car, your campsite, or your emergency kit."
+        ),
+    ),
+    dict(
+        id="contenders", kind="contenders",
+        text=(
+            "Let's meet the contenders. The Jackery Explorer 300 packs a two "
+            "hundred and ninety three watt-hour lithium-ion battery, two pure "
+            "sine wave AC outlets, USB-C, USB-A, and a twelve volt car port, "
+            "all in a seven pound box with a sturdy fold-down handle. The Anker"
+            " SOLIX C300 DC stores two hundred and eighty eight watt-hours in a"
+            " lithium iron phosphate battery. It skips the AC outlets entirely,"
+            " and instead gives you four USB-C ports, two USB-A ports, a car "
+            "socket, and a pop-out light, in a tall, narrow body that weighs "
+            "just over six pounds. That one design choice, AC or no AC, shapes "
+            "everything that follows."
+        ),
+    ),
+    dict(
+        id="capacity", kind="bars", round=1, title="Battery Capacity",
+        unit="Wh", values=[293, 288], vmax=320, winner=0,
+        caption="Just 5 Wh apart, less than 2%",
+        text=(
+            "Round one, battery capacity. The Jackery stores two hundred and "
+            "ninety three watt-hours. The Anker stores two hundred and eighty "
+            "eight. That is a difference of five watt-hours, less than two "
+            "percent, and in daily use you will never notice it. Both have "
+            "enough energy to charge a phone more than a dozen times, or top up"
+            " a laptop several times over. On paper, the Jackery takes round "
+            "one, but only by a hair."
+        ),
+    ),
+    dict(
+        id="chemistry", kind="cycles", round=2, title="Battery Chemistry & Lifespan",
+        values=[500, 3000], labels=["Lithium-ion (NMC)", "LiFePO4"], winner=1,
+        text=(
+            "Round two, battery chemistry and lifespan, and this is where the "
+            "gap gets huge. The Jackery uses a lithium-ion NMC battery rated "
+            "for about five hundred cycles before it falls to eighty percent of"
+            " its original capacity. The Anker uses lithium iron phosphate, or "
+            "L F P, rated for more than three thousand cycles to that same "
+            "eighty percent. That is six times the rated lifespan. Cycle each "
+            "one every day, and the Jackery hits that mark in well under two "
+            "years, while the Anker keeps going for roughly eight. L F P is "
+            "also more thermally stable. Round two goes clearly to Anker."
+        ),
+    ),
+    dict(
+        id="output", kind="acdc", round=3, title="Power Output: AC vs DC",
+        winner=0,
+        text=(
+            "Round three, power output, and this is the most important round in"
+            " the whole comparison. The Jackery has a three hundred watt pure "
+            "sine wave inverter with a surge rating of about five hundred "
+            "watts, feeding two standard AC outlets. That means you can plug in"
+            " almost anything with a normal wall plug, as long as it stays "
+            "under three hundred watts, like a small TV, a fan, or a CPAP on "
+            "its power brick. The Anker C300 DC can also deliver up to three "
+            "hundred watts, but only through USB and its twelve volt car "
+            "socket. There is no AC outlet at all. If a device only has a wall "
+            "plug, the Anker cannot run it. Round three is a decisive win for "
+            "the Jackery."
+        ),
+    ),
+    dict(
+        id="ports", kind="ports", round=4, title="USB-C & Ports",
+        ports=[
+            [["AC outlet", 2], ["USB-C", 1], ["USB-A", 2], ["12V car", 1]],
+            [["AC outlet", 0], ["USB-C", 4], ["USB-A", 2], ["12V car", 1]],
+        ],
+        usbc=[60, 140], winner=1,
+        text=(
+            "Round four, USB-C and ports. Both have seven outputs, built for "
+            "different gear. The Jackery gives you a single sixty watt USB-C "
+            "port, two USB-A ports, including one quick charge port, and a car "
+            "outlet. Sixty watts is fine for phones and tablets, but slow for a"
+            " bigger laptop. The Anker gives you four USB-C ports, and two of "
+            "them can each deliver up to one hundred and forty watts. That is "
+            "enough to fast-charge two large laptops at once, with no inverter "
+            "wasting energy. Round four belongs to Anker."
+        ),
+    ),
+    dict(
+        id="recharge", kind="recharge", round=5, title="Recharge Speed",
+        hours=[6.0, 1.0],
+        notes=["~6 hrs with the included AC adapter",
+               "~80% in about 1 hr via dual 140W USB-C"],
+        winner=1,
+        text=(
+            "Round five, recharge speed. The Jackery charges through its "
+            "included AC adapter, and takes around six hours to fill from "
+            "empty. Add a USB-C charger and that drops to about two and a half."
+            " The Anker recharges through its two bidirectional USB-C ports, up"
+            " to two hundred and eighty watts combined. With two powerful USB-C"
+            " chargers, it reaches about eighty percent in roughly an hour, and"
+            " full in about ninety minutes. One catch: there is no AC input, so"
+            " you will need your own USB-C wall chargers to get those speeds. "
+            "Even so, round five goes to Anker."
+        ),
+    ),
+    dict(
+        id="solar", kind="solar", round=6, title="Solar & Car Charging",
+        watts=[100, 100], hours=["~5 hrs", "~4 hrs"], winner=None,
+        text=(
+            "Round six, solar and car charging. Both units use an MPPT solar "
+            "controller and accept up to about one hundred watts of solar "
+            "input. In good sun, a hundred watt panel refills the Jackery in "
+            "around five hours, and the Anker in around four, according to "
+            "their makers. Both can also charge from your car's twelve volt "
+            "socket while you drive. The Anker uses a standard XT sixty solar "
+            "connector. The numbers are close enough that round six is a tie."
+        ),
+    ),
+    dict(
+        id="size", kind="weight", round=7, title="Size & Weight",
+        weights=[7.1, 6.2],
+        dims=["9.1 × 5.2 × 7.8 in", "4.9 × 4.7 × 7.9 in"],
+        winner=1,
+        text=(
+            "Round seven, size and weight. The Jackery weighs about seven point"
+            " one pounds and measures roughly nine by five by eight inches. The"
+            " Anker weighs about six point two pounds, and its tall, upright "
+            "body takes up only about half the space, roughly five by five by "
+            "eight inches. It slips into a backpack far more easily. Round "
+            "seven goes to Anker."
+        ),
+    ),
+    dict(
+        id="runtime", kind="runtime", round=8, title="Real-World Runtimes",
+        devices=[
+            ["Smartphone (15 Wh)", "~16 charges", "~17 charges"],
+            ["Laptop (60 Wh)", "~4 charges", "~4 charges"],
+            ["12V fridge (45 W avg)", "~5 hrs", "~5.5 hrs"],
+            ["LED lights (10 W)", "~24 hrs", "~25 hrs"],
+            ["Small TV (60 W, AC plug)", "~4 hrs", "Not supported"],
+        ],
+        winner=None,
+        text=(
+            "Round eight, real-world runtimes. For USB and twelve volt gear, "
+            "these two are almost identical. Expect around sixteen phone "
+            "charges, about four laptop charges, five or so hours on a small "
+            "twelve volt fridge, and a full day of LED lights. The Anker can "
+            "squeeze out a little more on DC devices because it never has to "
+            "convert power to AC. But anything with a regular wall plug, like a"
+            " small TV, only runs on the Jackery. These are estimates, and "
+            "results will vary. Overall, round eight is a tie."
+        ),
+    ),
+    dict(
+        id="features", kind="features", round=9, title="Design, Extras & Warranty",
+        rows=[
+            ["Built-in light", "No", "Pop-out light"],
+            ["Pure sine wave AC", "Yes", "No AC"],
+            ["Charge while powering devices", "Yes", "Yes"],
+            ["Solar connector", "8mm DC", "XT60"],
+            ["Warranty", "2 years", "3 years"],
+        ],
+        winner=1,
+        text=(
+            "Round nine, design, extras, and warranty. The Jackery is simple "
+            "and proven, with a clear display. The Anker adds a clever pop-out "
+            "light that is genuinely useful at a campsite or during a blackout."
+            " Both can power your devices while they are charging. On warranty,"
+            " the Explorer 300 comes with two years, while the C300 DC is "
+            "listed with three. Round nine goes to Anker."
+        ),
+    ),
+    dict(
+        id="value", kind="value", round=10, title="Price & Value",
+        winner=1,
+        text=(
+            "Round ten, price and value. Prices on both change constantly, so "
+            "check the links for today's deal. Recently, the Anker C300 DC has "
+            "often sold for around one hundred and fifty dollars, while the "
+            "Explorer 300 has usually cost more. And with six times the rated "
+            "battery lifespan, the Anker's cost per cycle is dramatically lower"
+            " over the years. The Jackery's value is in what the Anker cannot "
+            "do: real AC outlets. If you need them, that is worth paying for. "
+            "For pure USB and DC power, round ten goes to Anker."
+        ),
+    ),
+    dict(
+        id="scorecard", kind="scorecard",
+        score=[2, 6, 2],
+        rounds=[
+            ["Capacity", 0], ["Lifespan", 1], ["AC Output", 0], ["USB-C", 1],
+            ["Recharge", 1], ["Solar", None], ["Size", 1], ["Runtime", None],
+            ["Extras", 1], ["Value", 1],
+        ],
+        text=(
+            "Let's tally the scorecard. The Jackery Explorer 300 wins on "
+            "capacity and on AC output. The Anker SOLIX C300 DC wins on battery"
+            " lifespan, USB-C, recharge speed, size, extras, and value. Solar "
+            "charging and runtime are ties. Final score: Anker six, Jackery "
+            "two, with two draws. But one round can decide it for you."
+        ),
+    ),
+    dict(
+        id="verdict", kind="verdict",
+        picks=[
+            ["You need real AC outlets", "Wall-plug devices: TV, fan, CPAP brick",
+             "You want a proven, simple unit"],
+            ["Your gear charges over USB-C", "You want years of daily cycles",
+             "You want tiny, light, and fast to recharge"],
+        ],
+        text=(
+            "So, which one should you buy? Choose the Jackery Explorer 300 if "
+            "you need real AC outlets. If you want to run devices with standard"
+            " wall plugs, like a small TV, a fan, or a CPAP on its normal power"
+            " supply, the Jackery does that and the Anker simply cannot. Choose"
+            " the Anker SOLIX C300 DC if your gear charges over USB-C or twelve"
+            " volt. You get a smaller, lighter unit, far faster recharging, and"
+            " a battery built to last for years. For most travelers and "
+            "everyday carry, the Anker is the smarter buy. For AC backup power,"
+            " it has to be the Jackery."
+        ),
+    ),
+    dict(
+        id="outro", kind="outro",
+        text=(
+            "Which one would you pick? Let us know in the comments. Links to "
+            "both power stations are in the description, so you can check "
+            "today's prices. If this helped, like and subscribe for more head-"
+            "to-heads. Thanks for watching."
+        ),
+    ),
+]
+
+if __name__ == "__main__":
+    out = pathlib.Path(__file__).with_name("scenes.json")
+    out.write_text(json.dumps(SCENES, indent=1))
+    words = sum(len(s["text"].split()) for s in SCENES)
+    print(f"{len(SCENES)} scenes, {words} words, ~{words / 150:.1f} min at 150 wpm")

@@ -1,0 +1,727 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Jackery 300 vs Anker C300 DC</title>
+<style>
+@font-face{font-family:Mont;font-weight:500;src:url(fonts/Montserrat-500.ttf)}
+@font-face{font-family:Mont;font-weight:700;src:url(fonts/Montserrat-700.ttf)}
+@font-face{font-family:Mont;font-weight:800;src:url(fonts/Montserrat-800.ttf)}
+@font-face{font-family:Mont;font-weight:900;src:url(fonts/Montserrat-900.ttf)}
+@font-face{font-family:Inter;font-weight:400;src:url(fonts/Inter-400.ttf)}
+@font-face{font-family:Inter;font-weight:500;src:url(fonts/Inter-500.ttf)}
+@font-face{font-family:Inter;font-weight:600;src:url(fonts/Inter-600.ttf)}
+:root{--j:#FF8A1F;--a:#27B8FF;--win:#3DDC97;--no:#FF5A5F;--ink:#F3F6FB;--dim:#8C97AB;--card:rgba(20,28,42,.72);--line:rgba(255,255,255,.08)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1920px;height:1080px;overflow:hidden;background:#070B12;color:var(--ink);font-family:Inter,sans-serif}
+#stage{position:absolute;inset:0;overflow:hidden}
+.abs{position:absolute}
+.bg{position:absolute;inset:-100px}
+#grid{position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:80px 80px;opacity:.35;mask-image:radial-gradient(ellipse at center,#000 30%,transparent 75%)}
+.scene{position:absolute;inset:0;display:none;will-change:opacity,transform}
+.h1{font-family:Mont;font-weight:900;letter-spacing:-.02em}
+.h2{font-family:Mont;font-weight:800;letter-spacing:-.01em}
+.lbl{font-family:Mont;font-weight:700;letter-spacing:.18em;text-transform:uppercase;font-size:20px;color:var(--dim)}
+.card{background:var(--card);border:1px solid rgba(255,255,255,.09);border-radius:28px;box-shadow:0 30px 80px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06)}
+.j{color:var(--j)}.a{color:var(--a)}.g{color:var(--win)}.r{color:var(--no)}
+.chip{display:inline-flex;align-items:center;gap:12px;padding:12px 24px;border-radius:999px;font-family:Mont;font-weight:700;font-size:26px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);white-space:nowrap}
+.row{display:flex;align-items:center;gap:18px}
+.tc{text-align:center}
+.num{font-family:Mont;font-weight:900;font-variant-numeric:tabular-nums}
+/* HUD */
+#hud{position:absolute;inset:0;pointer-events:none}
+#brand{left:56px;top:40px;font-family:Mont;font-weight:800;font-size:22px;letter-spacing:.06em}
+#dots{left:50%;top:44px;transform:translateX(-50%);display:flex;gap:14px}
+#dots i{width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.14);display:block}
+#score{right:56px;top:30px;display:flex;align-items:center;gap:14px;font-family:Mont;font-weight:900;font-size:30px}
+#score .s{min-width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center}
+#cap{left:50%;bottom:34px;transform:translateX(-50%);max-width:1500px;padding:14px 30px;border-radius:18px;background:rgba(6,10,18,.78);border:1px solid rgba(255,255,255,.08);font-family:Inter;font-weight:600;font-size:32px;line-height:1.3;text-align:center;white-space:nowrap}
+#prog{left:0;bottom:0;height:5px;background:linear-gradient(90deg,var(--j),var(--a))}
+/* round header */
+.rhead{position:absolute;left:0;top:0;transform-origin:0 0;white-space:nowrap}
+.rhead .rn{font-family:Mont;font-weight:900;color:var(--dim);letter-spacing:.2em}
+.rhead .rt{font-family:Mont;font-weight:900;letter-spacing:-.02em}
+.banner{position:absolute;left:50%;top:880px;transform:translateX(-50%);padding:16px 34px;border-radius:999px;font-family:Mont;font-weight:900;font-size:30px;letter-spacing:.08em;white-space:nowrap;display:flex;gap:16px;align-items:center}
+.bar{height:64px;border-radius:18px;background:rgba(255,255,255,.06);overflow:hidden}.bar:not(.abs){position:relative}
+.bar>i{position:absolute;left:0;top:0;bottom:0;border-radius:18px;display:block}
+table.t{border-collapse:separate;border-spacing:0 14px;font-size:30px}
+table.t td{padding:20px 30px;background:rgba(20,28,42,.72)}
+table.t td:first-child{border-radius:18px 0 0 18px;font-weight:600}
+table.t td:last-child{border-radius:0 18px 18px 0}
+table.t th{font-family:Mont;font-weight:800;font-size:26px;letter-spacing:.1em;text-transform:uppercase;padding:0 30px 4px}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="bg" id="glowJ"></div>
+  <div class="bg" id="glowA"></div>
+  <div id="grid"></div>
+  <canvas id="parts" width="1920" height="1080" class="abs" style="left:0;top:0"></canvas>
+  <div id="scenes"></div>
+  <div id="hud">
+    <div id="brand" class="abs"><span class="j">JACKERY 300</span> <span style="color:var(--dim)">vs</span> <span class="a">ANKER C300 DC</span></div>
+    <div id="dots" class="abs"></div>
+    <div id="score" class="abs"><span class="s" style="background:rgba(255,138,31,.16)"><span class="j" id="sj">0</span></span><span style="color:var(--dim);font-size:22px">:</span><span class="s" style="background:rgba(39,184,255,.16)"><span class="a" id="sa">0</span></span></div>
+    <div id="cap" class="abs"></div>
+    <div id="prog" class="abs"></div>
+  </div>
+</div>
+<script>
+const W = 1920, H = 1080;
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const ease = x => 1 - Math.pow(1 - clamp(x), 3);
+const easeIO = x => { x = clamp(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const back = x => { x = clamp(x); const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const P = (t, a, d = .6) => clamp((t - a) / d);
+const $ = s => document.querySelector(s);
+function el(tag, cls, html, parent, style) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (html != null) e.innerHTML = html;
+  if (style) e.style.cssText = style;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+// Reveal: fade + rise (or custom offsets) starting at time `at`.
+function show(e, t, at, o = {}) {
+  const p = (o.back ? back : ease)(P(t, at, o.d || .6));
+  const dx = o.dx || 0, dy = o.dy == null ? 34 : o.dy, s0 = o.s == null ? 1 : o.s;
+  e.style.opacity = clamp(P(t, at, (o.d || .6) * .7));
+  e.style.transform = `${o.base || ''} translate(${(1 - p) * dx}px,${(1 - p) * dy}px) scale(${lerp(s0, 1, p)})`;
+  return p;
+}
+const fmt = n => Math.round(n).toLocaleString('en-US');
+
+/* ---------------------------------------------------------------- icons */
+const IC = {
+  phone: '<rect x="18" y="4" width="28" height="56" rx="6"/><line x1="28" y1="52" x2="36" y2="52"/>',
+  laptop: '<rect x="12" y="12" width="40" height="28" rx="3"/><path d="M4 48h56l-4 6H8z"/>',
+  fridge: '<rect x="14" y="4" width="36" height="56" rx="5"/><line x1="14" y1="24" x2="50" y2="24"/><line x1="22" y1="12" x2="22" y2="18"/><line x1="22" y1="30" x2="22" y2="40"/>',
+  bulb: '<path d="M32 6a18 18 0 0 0-10 33v7h20v-7A18 18 0 0 0 32 6z"/><line x1="24" y1="54" x2="40" y2="54"/>',
+  tv: '<rect x="4" y="10" width="56" height="36" rx="4"/><line x1="22" y1="56" x2="42" y2="56"/><line x1="32" y1="46" x2="32" y2="56"/>',
+  fan: '<circle cx="32" cy="28" r="22"/><circle cx="32" cy="28" r="4"/><path d="M32 24c-2-10 8-14 10-8M36 30c10 2 8 12 2 11M28 30c-7 7-15 1-11-4"/><line x1="32" y1="50" x2="32" y2="60"/><line x1="22" y1="60" x2="42" y2="60"/>',
+  cpap: '<rect x="8" y="22" width="40" height="30" rx="6"/><path d="M48 32c10 0 10-22-6-22"/><circle cx="28" cy="37" r="7"/>',
+  plug: '<path d="M22 4v14M42 4v14"/><path d="M14 18h36v10a18 18 0 0 1-36 0z"/><line x1="32" y1="46" x2="32" y2="60"/>',
+  usba: '<rect x="8" y="20" width="48" height="24" rx="3"/><rect x="16" y="27" width="32" height="8" rx="1"/>',
+  usbc: '<rect x="6" y="22" width="52" height="20" rx="10"/><rect x="16" y="29" width="32" height="6" rx="3"/>',
+  sun: '<circle cx="32" cy="32" r="12"/><path d="M32 4v8M32 52v8M4 32h8M52 32h8M12 12l6 6M46 46l6 6M12 52l6-6M46 18l6-6"/>',
+  car: '<path d="M8 40l6-16h36l6 16v10H8z"/><circle cx="18" cy="50" r="5"/><circle cx="46" cy="50" r="5"/>',
+  bolt: '<path d="M36 4L12 36h18l-4 24 26-34H34z"/>',
+  light: '<path d="M20 8h24l-4 20H24z"/><path d="M22 34h20M24 42h16M28 50h8"/>',
+  shield: '<path d="M32 4l24 8v18c0 16-12 26-24 30C20 56 8 46 8 30V12z"/><path d="M22 32l8 8 14-16"/>',
+  camera: '<rect x="6" y="18" width="52" height="36" rx="6"/><circle cx="32" cy="36" r="10"/><path d="M22 18l4-8h12l4 8"/>',
+  tag: '<path d="M6 30V8h22l30 30-22 22z"/><circle cx="18" cy="20" r="4"/>',
+  chat: '<path d="M8 10h48v32H26l-12 12V42H8z"/>',
+  thumb: '<path d="M8 28h10v28H8zM18 30l12-24c6 0 8 4 7 10l-2 8h17c4 0 6 4 5 8l-5 20c-1 3-3 4-6 4H18"/>',
+};
+function icon(name, size = 56, color = 'currentColor', sw = 4) {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${IC[name]}</svg>`;
+}
+const CHECK = (c = 'var(--win)', s = 44) => `<svg width="${s}" height="${s}" viewBox="0 0 48 48"><circle cx="24" cy="24" r="22" fill="${c}" opacity=".18"/><path d="M14 25l7 7 13-15" fill="none" stroke="${c}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const CROSS = (c = 'var(--no)', s = 44) => `<svg width="${s}" height="${s}" viewBox="0 0 48 48"><circle cx="24" cy="24" r="22" fill="${c}" opacity=".18"/><path d="M16 16l16 16M32 16L16 32" fill="none" stroke="${c}" stroke-width="5" stroke-linecap="round"/></svg>`;
+
+/* ----------------------------------------------------- product drawings */
+// Stylized vector illustrations of each unit's published shape.
+function jackerySVG(w) {
+  return `<svg width="${w}" viewBox="0 0 460 380" xmlns="http://www.w3.org/2000/svg">
+  <defs><linearGradient id="jb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a4e56"/><stop offset="1" stop-color="#2a2d33"/></linearGradient>
+  <linearGradient id="jh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFA24A"/><stop offset="1" stop-color="#E86F0C"/></linearGradient></defs>
+  <ellipse cx="230" cy="366" rx="210" ry="12" fill="#000" opacity=".45"/>
+  <rect x="88" y="14" width="44" height="90" rx="16" fill="url(#jh)"/><rect x="328" y="14" width="44" height="90" rx="16" fill="url(#jh)"/>
+  <rect x="88" y="14" width="284" height="38" rx="19" fill="url(#jh)"/>
+  <rect x="20" y="78" width="420" height="280" rx="30" fill="url(#jb)"/>
+  <rect x="20" y="78" width="420" height="64" rx="30" fill="#3d4148"/>
+  <text x="230" y="122" text-anchor="middle" font-family="Mont" font-weight="800" font-size="30" fill="#FF8A1F">Jackery</text>
+  <rect x="42" y="156" width="376" height="180" rx="18" fill="#1d1f24"/>
+  <rect x="62" y="174" width="130" height="78" rx="10" fill="#0c2426"/>
+  <text x="127" y="212" text-anchor="middle" font-family="Mont" font-weight="800" font-size="30" fill="#71F2D4">100%</text>
+  <text x="127" y="238" text-anchor="middle" font-family="Inter" font-weight="600" font-size="14" fill="#3fae96">OUT 0W · IN 0W</text>
+  <rect x="64" y="272" width="34" height="12" rx="6" fill="#08090b" stroke="#5a5f68" stroke-width="2"/>
+  <rect x="108" y="270" width="36" height="16" rx="2" fill="#08090b" stroke="#5a5f68" stroke-width="2"/>
+  <rect x="152" y="270" width="36" height="16" rx="2" fill="#08090b" stroke="#5a5f68" stroke-width="2"/>
+  <circle cx="81" cy="310" r="14" fill="#08090b" stroke="#5a5f68" stroke-width="2"/>
+  <g class="jac">${[232, 324].map(x => `<rect x="${x}" y="176" width="74" height="96" rx="14" fill="#2f3238" stroke="#4b5059" stroke-width="2"/>
+    <rect x="${x + 20}" y="198" width="7" height="26" rx="2" fill="#07080a"/><rect x="${x + 47}" y="198" width="7" height="26" rx="2" fill="#07080a"/>
+    <path d="M${x + 30} 248a7 7 0 0 1 14 0v8h-14z" fill="#07080a"/>`).join('')}</g>
+  <text x="315" y="300" text-anchor="middle" font-family="Inter" font-weight="600" font-size="13" fill="#6b717c">AC 110V · 300W</text>
+  <circle cx="394" cy="316" r="8" fill="#FF8A1F"/>
+  </svg>`;
+}
+function ankerSVG(w) {
+  return `<svg width="${w}" viewBox="0 0 300 470" xmlns="http://www.w3.org/2000/svg">
+  <defs><linearGradient id="ab" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2a2d33"/><stop offset=".5" stop-color="#40444c"/><stop offset="1" stop-color="#26292e"/></linearGradient></defs>
+  <ellipse cx="150" cy="456" rx="130" ry="11" fill="#000" opacity=".45"/>
+  <path d="M96 64 C96 2, 204 2, 204 64" fill="none" stroke="#17191c" stroke-width="18" stroke-linecap="round"/>
+  <path d="M96 64 C96 2, 204 2, 204 64" fill="none" stroke="#2c2f35" stroke-width="10" stroke-linecap="round"/>
+  <rect x="52" y="44" width="196" height="52" rx="18" fill="#545a63"/>
+  <rect class="alight" x="70" y="58" width="160" height="14" rx="7" fill="#dff3ff" opacity=".55"/>
+  <rect x="36" y="80" width="228" height="368" rx="34" fill="url(#ab)"/>
+  <rect x="58" y="112" width="184" height="312" rx="22" fill="#1b1d21"/>
+  <rect x="78" y="130" width="144" height="64" rx="12" fill="#081d2b"/>
+  <text x="150" y="172" text-anchor="middle" font-family="Mont" font-weight="800" font-size="30" fill="#5fd0ff">100%</text>
+  <text x="150" y="222" text-anchor="middle" font-family="Mont" font-weight="800" font-size="18" letter-spacing="3" fill="#8b929c">ANKER SOLIX</text>
+  <g class="ausb">${[[80, 244], [158, 244], [80, 280], [158, 280]].map(([x, y]) => `<rect x="${x}" y="${y}" width="62" height="18" rx="9" fill="#08090b" stroke="#27B8FF" stroke-opacity=".55" stroke-width="2"/>`).join('')}</g>
+  <rect x="80" y="316" width="62" height="20" rx="2" fill="#08090b" stroke="#5a5f68" stroke-width="2"/>
+  <rect x="158" y="316" width="62" height="20" rx="2" fill="#08090b" stroke="#5a5f68" stroke-width="2"/>
+  <circle cx="150" cy="382" r="24" fill="#08090b" stroke="#5a5f68" stroke-width="2"/>
+  <circle cx="150" cy="382" r="9" fill="#1b1d21"/>
+  <circle cx="220" cy="398" r="8" fill="#27B8FF"/>
+  </svg>`;
+}
+
+/* ------------------------------------------------------------ timeline */
+let TL, SC = [];
+function cueFn(sc) {
+  const s = sc.sentences;
+  return k => { if (!s.length) return 0; const i = k < 0 ? Math.max(0, s.length + k) : Math.min(k, s.length - 1); return s[i].start; };
+}
+// Caption chunks: split long sentences into readable pieces, time by words.
+function buildCaptions(sc) {
+  const out = [];
+  for (const s of sc.sentences) {
+    const words = s.text.split(/\s+/).filter(Boolean);
+    const n = Math.ceil(words.length / 10), per = Math.ceil(words.length / n);
+    for (let i = 0; i < words.length; i += per) {
+      const a = i / words.length, b = Math.min(1, (i + per) / words.length);
+      out.push({ text: words.slice(i, i + per).join(' '), start: lerp(s.start, s.end, a), end: lerp(s.start, s.end, b) });
+    }
+  }
+  return out;
+}
+
+/* round header: big centered card that settles to the top-left */
+function roundHead(root, sc) {
+  const h = el('div', 'rhead', `<div class="rn">ROUND ${String(sc.round).padStart(2, '0')}</div><div class="rt">${sc.title}</div>`, root);
+  const rn = h.children[0], rt = h.children[1];
+  return t => {
+    const intro = ease(P(t, 0, .7)), settle = easeIO(P(t, 1.5, .8));
+    const big = { rn: 44, rt: 104 }, small = { rn: 22, rt: 54 };
+    rn.style.fontSize = lerp(big.rn, small.rn, settle) + 'px';
+    rt.style.fontSize = lerp(big.rt, small.rt, settle) + 'px';
+    const wBig = h.offsetWidth, hBig = h.offsetHeight;
+    const cx = (W - wBig) / 2, cy = (H - hBig) / 2 - 20;
+    h.style.left = lerp(cx, 120, settle) + 'px';
+    h.style.top = lerp(cy + (1 - intro) * 40, 120, settle) + 'px';
+    h.style.opacity = intro;
+    h.style.textAlign = settle < .5 ? 'center' : 'left';
+  };
+}
+function winnerBanner(root, sc, cue, top = 880) {
+  const w = sc.winner;
+  const txt = w == null ? `<span style="color:var(--ink)">ROUND ${sc.round}: TIE</span>` :
+    `<span style="color:var(--dim)">ROUND ${sc.round} WINNER</span><span class="${w ? 'a' : 'j'}">${w ? 'ANKER C300 DC' : 'JACKERY 300'}</span>`;
+  const col = w == null ? 'rgba(255,255,255,.1)' : w ? 'rgba(39,184,255,.16)' : 'rgba(255,138,31,.16)';
+  const b = el('div', 'banner', `${w == null ? '' : CHECK(w ? 'var(--a)' : 'var(--j)', 36)}${txt}`, root, `top:${top}px;background:${col};border:2px solid ${w == null ? 'rgba(255,255,255,.2)' : w ? 'var(--a)' : 'var(--j)'}`);
+  const at = cue(-1);
+  sc._winAt = at;
+  return t => show(b, t, at, { back: true, s: .7, dy: 20, base: 'translateX(-50%)' });
+}
+// Two side panels (Jackery left, Anker right) with titles.
+function sides(root, y = 250, h = 580, gap = 60) {
+  const w = (W - 240 - gap) / 2;
+  return [0, 1].map(i => {
+    const p = el('div', 'card abs', '', root, `left:${120 + i * (w + gap)}px;top:${y}px;width:${w}px;height:${h}px;${i ? 'border-color:rgba(39,184,255,.25)' : 'border-color:rgba(255,138,31,.25)'}`);
+    el('div', 'lbl', i ? '<span class="a">Anker SOLIX C300 DC</span>' : '<span class="j">Jackery Explorer 300</span>', p, 'position:absolute;left:36px;top:30px');
+    p._w = w; p._h = h;
+    return p;
+  });
+}
+function glowWinner(panel, t, at, color) {
+  const g = ease(P(t, at, .6));
+  panel.style.boxShadow = `0 30px 80px rgba(0,0,0,.45), 0 0 ${60 * g}px ${color.replace('1)', (.35 * g) + ')')}`;
+}
+const JC = 'rgba(255,138,31,1)', AC = 'rgba(39,184,255,1)';
+
+/* -------------------------------------------------------------- scenes */
+const BUILD = {
+  intro(root, sc, cue) {
+    const j = el('div', 'abs', jackerySVG(560), root, 'left:170px;top:300px');
+    const a = el('div', 'abs', ankerSVG(330), root, 'left:1430px;top:250px');
+    const vs = el('div', 'abs h1 tc', 'VS', root, 'left:860px;top:430px;width:200px;height:200px;border-radius:50%;font-size:92px;line-height:200px;background:radial-gradient(circle,#1b2436,#0c111b);border:3px solid rgba(255,255,255,.18);box-shadow:0 0 80px rgba(255,255,255,.12)');
+    const tj = el('div', 'abs h1 j', 'JACKERY<br>EXPLORER 300', root, 'left:120px;top:130px;font-size:74px;line-height:1');
+    const ta = el('div', 'abs h1 a', 'ANKER SOLIX<br>C300 DC', root, 'right:120px;top:130px;font-size:74px;line-height:1;text-align:right');
+    const nj = el('div', 'abs num j', '293 Wh', root, 'left:300px;top:720px;font-size:64px');
+    const na = el('div', 'abs num a', '288 Wh', root, 'left:1480px;top:720px;font-size:64px');
+    const cj = el('div', 'abs chip', `${icon('plug', 34, 'var(--j)')} Real AC outlets`, root, 'left:285px;top:810px');
+    const ca = el('div', 'abs chip', `${icon('usbc', 34, 'var(--a)')} USB-C first · LiFePO4`, root, 'left:1385px;top:810px');
+    const ten = el('div', 'abs chip', '10 ROUNDS · 1 WINNER', root, 'left:50%;top:680px;font-size:24px;letter-spacing:.14em');
+    return t => {
+      const pj = back(P(t, .1, .9)), pa = back(P(t, .25, .9));
+      j.style.transform = `translateX(${(1 - pj) * -900}px) translateY(${Math.sin(t * 1.3) * 6}px)`;
+      a.style.transform = `translateX(${(1 - pa) * 900}px) translateY(${Math.sin(t * 1.3 + 1.5) * 6}px)`;
+      const pv = back(P(t, .9, .6));
+      vs.style.transform = `scale(${pv}) rotate(${(1 - pv) * -30}deg)`; vs.style.opacity = clamp(P(t, .9, .2));
+      show(tj, t, .5, { dx: -60, dy: 0 }); show(ta, t, .65, { dx: 60, dy: 0 });
+      show(nj, t, 1.3); show(na, t, 1.45);
+      show(cj, t, cue(1) + .6, { back: true, s: .8 }); show(ca, t, cue(2) + .8, { back: true, s: .8 });
+      show(ten, t, cue(3), { back: true, s: .7, base: 'translateX(-50%)' });
+    };
+  },
+  contenders(root, sc, cue) {
+    const [pj, pa] = sides(root, 150, 670);
+    el('div', 'abs', jackerySVG(270), pj, 'left:30px;top:190px');
+    el('div', 'abs', ankerSVG(180), pa, 'left:70px;top:130px');
+    const rows = [
+      [pj, ['293 Wh lithium-ion (NMC)', '2× pure sine wave AC', 'USB-C · 2× USB-A · 12V car', '7.1 lb · fold-down handle'], 'var(--j)', cue(1)],
+      [pa, ['288 Wh LiFePO4', 'No AC outlets', '4× USB-C · 2× USB-A · 12V car', 'Pop-out light · 6.2 lb'], 'var(--a)', cue(2)],
+    ];
+    const items = [];
+    rows.forEach(([p, list, c, at], k) => list.forEach((txt, i) => {
+      const bad = txt.startsWith('No AC');
+      const e = el('div', 'abs row', `${bad ? CROSS() : `<span style="width:14px;height:14px;border-radius:50%;background:${c};display:block;margin:0 15px"></span>`}<span style="font-size:29px;font-weight:600;white-space:nowrap">${txt}</span>`, p, `left:${k ? 290 : 320}px;top:${130 + i * 118}px`);
+      items.push([e, (k ? cue(3) - 1.2 : at) + i * (k ? .55 : .9)]);
+    }));
+    const ban = el('div', 'banner', '<span style="color:var(--dim)">THE BIG DIFFERENCE</span><span class="j">AC</span><span style="color:var(--dim)">or</span><span class="a">no AC</span>', root, 'top:860px;background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.18)');
+    return t => {
+      items.forEach(([e, at]) => show(e, t, at, { dx: -30, dy: 0 }));
+      show(pj, t, .2, { dy: 60 }); show(pa, t, .4, { dy: 60 });
+      show(ban, t, cue(-1), { back: true, s: .7, dy: 20, base: 'translateX(-50%)' });
+    };
+  },
+  bars(root, sc, cue) {
+    const hd = roundHead(root, sc);
+    const box = el('div', 'card abs', '', root, 'left:120px;top:260px;width:1680px;height:520px');
+    const bars = [0, 1].map(i => {
+      const c = i ? 'var(--a)' : 'var(--j)';
+      el('div', 'abs h2', `<span style="color:${c}">${i ? 'Anker SOLIX C300 DC' : 'Jackery Explorer 300'}</span>`, box, `left:60px;top:${70 + i * 170}px;font-size:34px`);
+      const b = el('div', 'bar abs', '<i></i>', box, `left:60px;top:${122 + i * 170}px;width:1150px`);
+      b.firstChild.style.background = `linear-gradient(90deg,${i ? '#0d6fa0,#27B8FF' : '#b3560a,#FF8A1F'})`;
+      const n = el('div', 'abs num', '', box, `left:1240px;top:${104 + i * 170}px;font-size:80px;white-space:nowrap;color:${c}`);
+      return { b, n };
+    });
+    const delta = el('div', 'abs chip', '<span class="g">Δ 5 Wh</span> · less than 2%', box, 'left:60px;top:430px');
+    const facts = el('div', 'abs row', `${icon('phone', 40, 'var(--dim)')}<span style="font-size:28px;color:var(--dim)">12+ phone charges</span><span style="width:30px"></span>${icon('laptop', 40, 'var(--dim)')}<span style="font-size:28px;color:var(--dim)">several laptop top-ups: both</span>`, box, 'left:560px;top:438px');
+    const wb = winnerBanner(root, sc, cue);
+    return t => {
+      hd(t); show(box, t, 1.8, { dy: 40 });
+      sc.values.forEach((v, i) => {
+        const p = easeIO(P(t, cue(i + 1) + .3, 1.6));
+        bars[i].b.firstChild.style.width = (p * v / sc.vmax * 100) + '%';
+        bars[i].n.textContent = fmt(p * v) + ' Wh';
+        bars[i].n.style.opacity = clamp(P(t, cue(i + 1) + .3, .3));
+      });
+      show(delta, t, cue(3), { back: true, s: .8 }); show(facts, t, cue(4), { dx: -30, dy: 0 });
+      wb(t);
+    };
+  },
+  cycles(root, sc, cue) {
+    const hd = roundHead(root, sc);
+    const panels = sides(root, 230, 470);
+    const parts = panels.map((p, i) => {
+      const c = i ? 'var(--a)' : 'var(--j)';
+      const chem = el('div', 'abs chip', sc.labels[i], p, `left:36px;top:80px;font-size:24px;color:${c}`);
+      const n = el('div', 'abs num', '0', p, `left:36px;top:150px;font-size:120px;line-height:1;color:${c}`);
+      el('div', 'abs', '<span style="font-size:26px;color:var(--dim)">cycles to 80% capacity</span>', p, 'left:40px;top:280px');
+      const grid = el('div', 'abs', '', p, 'left:40px;top:340px;display:grid;grid-template-columns:repeat(15,40px);gap:10px');
+      const cells = Array.from({ length: 30 }, () => el('i', '', '', grid, 'display:block;height:40px;border-radius:8px;background:rgba(255,255,255,.07)'));
+      return { chem, n, cells, c, p };
+    });
+    const six = el('div', 'abs h1 tc', '6×', root, 'left:1560px;top:370px;width:140px;height:140px;border-radius:50%;line-height:140px;font-size:60px;background:#0d1522;border:3px solid var(--a);box-shadow:0 0 60px rgba(39,184,255,.35)');
+    const tl = el('div', 'abs card', '', root, 'left:120px;top:730px;width:1680px;height:110px;padding:0');
+    el('div', 'abs lbl', 'Cycled daily', tl, 'left:30px;top:42px;font-size:18px');
+    const yrs = [0, 1].map(i => {
+      const b = el('div', 'abs', '', tl, `left:230px;top:${24 + i * 38}px;height:26px;border-radius:13px;background:${i ? 'var(--a)' : 'var(--j)'}`);
+      const l = el('div', 'abs num', '', tl, `top:${20 + i * 38}px;font-size:26px;color:${i ? 'var(--a)' : 'var(--j)'}`);
+      return { b, l };
+    });
+    const safe = el('div', 'abs chip', `${icon('shield', 30, 'var(--win)')} More thermally stable`, panels[1], 'right:30px;top:20px;font-size:20px;padding:8px 16px');
+    const wb = winnerBanner(root, sc, cue);
+    return t => {
+      hd(t);
+      show(panels[0], t, 1.8, { dy: 50 }); show(panels[1], t, 2.0, { dy: 50 });
+      parts.forEach((q, i) => {
+        const at = cue(i + 1) + .6, p = easeIO(P(t, at, i ? 2.2 : 1.2));
+        q.n.textContent = fmt(p * sc.values[i]) + (i && p >= 1 ? '+' : '');
+        const lit = Math.round(p * sc.values[i] / 100);
+        q.cells.forEach((c, k) => { c.style.background = k < lit ? q.c : 'rgba(255,255,255,.07)'; c.style.boxShadow = k < lit ? `0 0 14px ${i ? 'rgba(39,184,255,.5)' : 'rgba(255,138,31,.5)'}` : 'none'; });
+      });
+      show(six, t, cue(3), { back: true, s: .3, dy: 0 });
+      show(tl, t, cue(4) - .3, { dy: 30 });
+      [1.4, 8.2].forEach((y, i) => {
+        const p = easeIO(P(t, cue(4) + .4 + i * 1.6, 1.4)), wmax = 1250 / 8.5;
+        yrs[i].b.style.width = (p * y * wmax) + 'px';
+        yrs[i].l.style.left = (240 + p * y * wmax) + 'px';
+        yrs[i].l.textContent = p > .05 ? (i ? '≈ 8 years' : '≈ 1.4 years') : '';
+      });
+      show(safe, t, cue(5), { back: true, s: .8 });
+      wb(t);
+    };
+  },
+  acdc(root, sc, cue) {
+    const hd = roundHead(root, sc);
+    const [pj, pa] = sides(root, 230, 600);
+    // Gauges
+    function gauge(p, color) {
+      const g = el('div', 'abs', `<svg width="360" height="210" viewBox="0 0 360 210"><path d="M30 190 A150 150 0 0 1 330 190" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="26" stroke-linecap="round"/><path class="arc" d="M30 190 A150 150 0 0 1 330 190" fill="none" stroke="${color}" stroke-width="26" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/><line class="nd" x1="180" y1="190" x2="180" y2="70" stroke="#fff" stroke-width="7" stroke-linecap="round"/><circle cx="180" cy="190" r="14" fill="#fff"/></svg>`, p, 'left:36px;top:90px');
+      const v = el('div', 'abs num', '', p, `left:36px;top:310px;width:360px;text-align:center;font-size:54px;color:${color}`);
+      return { arc: g.querySelector('.arc'), nd: g.querySelector('.nd'), v };
+    }
+    const gj = gauge(pj, 'var(--j)'), ga = gauge(pa, 'var(--a)');
+    const sj = el('div', 'abs lbl', 'continuous → surge', pj, 'left:36px;top:380px;width:360px;text-align:center;font-size:17px');
+    const sa = el('div', 'abs lbl', 'max · USB-C + 12V only', pa, 'left:36px;top:380px;width:360px;text-align:center;font-size:17px');
+    const acIcon = el('div', 'abs row', `${icon('plug', 74, 'var(--j)')}<div><div class="h2" style="font-size:36px">2× AC outlets</div><div style="font-size:24px;color:var(--dim)">Pure sine wave · 110V</div></div>`, pj, 'left:440px;top:120px');
+    const noAc = el('div', 'abs row', `<div style="position:relative;width:74px;height:74px">${icon('plug', 74, '#6b7280')}<svg class="abs" style="left:0;top:0" width="74" height="74"><line x1="6" y1="68" x2="68" y2="6" stroke="var(--no)" stroke-width="7" stroke-linecap="round"/></svg></div><div><div class="h2" style="font-size:36px">No AC outlet</div><div style="font-size:24px;color:var(--dim)">DC only</div></div>`, pa, 'left:440px;top:120px');
+    const devs = [['tv', 'Small TV'], ['fan', 'Fan'], ['cpap', 'CPAP (power brick)']];
+    const dj = devs.map(([ic, n], i) => el('div', 'abs row', `${icon(ic, 46, 'var(--ink)')}<span style="font-size:28px;font-weight:600;width:280px">${n}</span>${CHECK()}`, pj, `left:440px;top:${270 + i * 90}px`));
+    const da = devs.map(([ic, n], i) => el('div', 'abs row', `${icon(ic, 46, '#6b7280')}<span style="font-size:28px;font-weight:600;width:280px;color:#9aa3b2">${n}</span>${CROSS()}`, pa, `left:440px;top:${270 + i * 90}px`));
+    const wb = winnerBanner(root, sc, cue);
+    return t => {
+      hd(t); show(pj, t, 1.8, { dy: 50 }); show(pa, t, 2.0, { dy: 50 });
+      // Jackery: 300 continuous, flick to 500 surge, settle back.
+      const a1 = easeIO(P(t, cue(1) + .4, 1.2)), sPk = P(t, cue(1) + 2.4, .5), sBk = P(t, cue(1) + 3.6, .8);
+      let wj = 300 * a1 + 200 * (ease(sPk) - ease(sBk));
+      const wa = 300 * easeIO(P(t, cue(3) + .4, 1.2));
+      [[gj, wj, cue(1)], [ga, wa, cue(3)]].forEach(([g, w, at]) => {
+        const f = w / 600; g.arc.setAttribute('stroke-dashoffset', 100 - f * 100);
+        g.nd.setAttribute('transform', `rotate(${-90 + f * 180} 180 190)`);
+        g.v.textContent = fmt(w) + ' W';
+      });
+      sj.style.opacity = clamp(P(t, cue(1) + 2.4, .4)); sa.style.opacity = clamp(P(t, cue(3) + 1, .4));
+      show(acIcon, t, cue(1) + 1, { dx: 30, dy: 0 });
+      dj.forEach((e, i) => show(e, t, cue(2) + .8 + i * .7, { dx: 30, dy: 0 }));
+      show(noAc, t, cue(4), { back: true, s: .8 });
+      da.forEach((e, i) => show(e, t, cue(5) + i * .35, { dx: 30, dy: 0 }));
+      glowWinner(pj, t, cue(-1), JC);
+      wb(t);
+    };
+  },
+  ports(root, sc, cue) {
+    const hd = roundHead(root, sc);
+    const panels = sides(root, 230, 600);
+    const ICN = { 'AC outlet': 'plug', 'USB-C': 'usbc', 'USB-A': 'usba', '12V car': 'car' };
+    const items = [];
+    panels.forEach((p, i) => {
+      let x = 40, k = 0;
+      sc.ports[i].forEach(([name, n]) => {
+        for (let q = 0; q < n; q++) {
+          const lab = i && name === 'USB-C' && q < 2 ? '140W' : !i && name === 'USB-C' ? '60W' : name === 'USB-A' ? 'A' : '';
+          const c = name === 'USB-C' ? (i ? 'var(--a)' : 'var(--j)') : 'var(--ink)';
+          const e = el('div', 'abs tc', `<div style="width:92px;height:92px;border-radius:22px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center">${icon(ICN[name], 52, c)}</div><div style="font-size:19px;font-weight:600;margin-top:8px;color:${c}">${lab || name.replace(' outlet', '')}</div>`, p, `left:${x}px;top:90px;width:92px`);
+          items.push([e, i, k++]); x += 108;
+        }
+      });
+      const cnt = el('div', 'abs num', `${sc.ports[i].reduce((s, [, n]) => s + n, 0)} outputs`, p, `left:40px;top:250px;font-size:44px;color:${i ? 'var(--a)' : 'var(--j)'}`);
+      p._cnt = cnt;
+    });
+    const meters = panels.map((p, i) => {
+      el('div', 'abs lbl', 'Max USB-C output per port', p, 'left:40px;top:350px;font-size:17px');
+      const b = el('div', 'bar abs', '<i></i>', p, `left:40px;top:390px;width:${p._w - 80}px;height:56px`);
+      b.firstChild.style.background = i ? 'linear-gradient(90deg,#0d6fa0,#27B8FF)' : 'linear-gradient(90deg,#b3560a,#FF8A1F)';
+      const v = el('div', 'abs num', '', p, `left:40px;top:462px;font-size:48px;color:${i ? 'var(--a)' : 'var(--j)'}`);
+      const note = el('div', 'abs', i ? '2 ports · enough for big laptops, two at once' : '1 port · fine for phones & tablets', p, 'left:230px;top:476px;font-size:24px;color:var(--dim)');
+      return { b, v, note };
+    });
+    const wb = winnerBanner(root, sc, cue);
+    return t => {
+      hd(t); show(panels[0], t, 1.8, { dy: 50 }); show(panels[1], t, 2.0, { dy: 50 });
+      items.forEach(([e, i, k]) => show(e, t, cue(i ? 3 : 2) + .3 + k * .32, { back: true, s: .5, dy: 10 }));
+      panels.forEach((p, i) => show(p._cnt, t, cue(i ? 3 : 2) + 2.6, { dy: 16 }));
+      meters.forEach((m, i) => {
+        const at = i ? cue(4) + .3 : cue(3) - 1.6, p = easeIO(P(t, at, 1.4)), w = sc.usbc[i];
+        m.b.firstChild.style.width = (p * w / 150 * 100) + '%';
+        m.v.textContent = p > 0 ? fmt(p * w) + ' W' : '';
+        m.note.style.opacity = clamp(P(t, at + 1.2, .5));
+      });
+      glowWinner(panels[1], t, cue(-1), AC);
+      wb(t);
+    };
+  },
+  recharge(root, sc, cue) {
+    const hd = roundHead(root, sc);
+    const box = el('div', 'card abs', '', root, 'left:120px;top:210px;width:1680px;height:560px');
+    const X0 = 130, Y0 = 470, CW = 1460, CH = 370, hx = h => X0 + h / 6.5 * CW, py = p => Y0 - p / 100 * CH;
+    const axes = [0, 1, 2, 3, 4, 5, 6].map(h => `<line x1="${hx(h)}" y1="${Y0}" x2="${hx(h)}" y2="${Y0 - CH}" stroke="rgba(255,255,255,.06)"/><text x="${hx(h)}" y="${Y0 + 40}" fill="#8C97AB" font-family="Mont" font-weight="700" font-size="22" text-anchor="middle">${h}h</text>`).join('')
+      + [0, 50, 80, 100].map(p => `<line x1="${X0}" y1="${py(p)}" x2="${X0 + CW}" y2="${py(p)}" stroke="rgba(255,255,255,${p === 80 ? .16 : .06})" ${p === 80 ? 'stroke-dasharray="8 8"' : ''}/><text x="${X0 - 20}" y="${py(p) + 8}" fill="#8C97AB" font-family="Mont" font-weight="700" font-size="22" text-anchor="end">${p}%</text>`).join('');
+    const path = pts => 'M' + pts.map(([h, p]) => `${hx(h).toFixed(1)} ${py(p).toFixed(1)}`).join(' L');
+    const jPts = [[0, 0], [5, 90], [6, 100]], jFast = [[0, 0], [2, 88], [2.5, 100]], aPts = [[0, 0], [1, 80], [1.5, 100]];
+    const svg = el('div', 'abs', `<svg width="1680" height="560">${axes}
+      <path class="pj" d="${path(jPts)}" fill="none" stroke="#FF8A1F" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/>
+      <path class="pjf" d="${path(jFast)}" fill="none" stroke="#FF8A1F" stroke-opacity=".6" stroke-width="5" stroke-dasharray="4 14" stroke-linecap="round"/>
+      <path class="pa" d="${path(aPts)}" fill="none" stroke="#27B8FF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/>
+      <circle class="da" r="14" fill="#27B8FF" cx="${hx(1)}" cy="${py(80)}"/></svg>`, box, 'left:0;top:0');
+    const pjP = svg.querySelector('.pj'), pjf = svg.querySelector('.pjf'), paP = svg.querySelector('.pa'), dA = svg.querySelector('.da');
+    const lj = el('div', 'abs chip', `<span class="j">Jackery</span> ~6 h · AC adapter`, box, `left:${hx(4.4)}px;top:${py(62)}px;font-size:24px`);
+    const ljf = el('div', 'abs chip', `<span class="j">+ USB-C</span> ~2.5 h`, box, `left:${hx(2.6)}px;top:${py(100) + 50}px;font-size:22px`);
+    const la = el('div', 'abs chip', `<span class="a">Anker</span> 80% in ~1 h`, box, `left:${hx(0.05)}px;top:${py(100) - 62}px;font-size:24px;border-color:var(--a)`);
+    const inp = el('div', 'abs chip', `${icon('usbc', 32, 'var(--a)')} 2× 140W USB-C in = 280W`, root, 'left:120px;top:790px;font-size:24px');
+    const warn = el('div', 'abs chip', `<span style="color:#FFC857">!</span> No AC input: bring your own USB-C chargers`, root, 'left:700px;top:790px;font-size:24px');
+    const wb = winnerBanner(root, sc, cue);
+    return t => {
+      hd(t); show(box, t, 1.8, { dy: 40 });
+      pjP.setAttribute('stroke-dashoffset', 100 - 100 * easeIO(P(t, cue(1), 3)));
+      pjf.style.opacity = ease(P(t, cue(2), .8));
+      paP.setAttribute('stroke-dashoffset', 100 - 100 * easeIO(P(t, cue(3) + .4, 1.4)));
+      const pd = back(P(t, cue(4) - .6, .5)); dA.setAttribute('r', 14 * pd); dA.style.opacity = clamp(pd);
+      show(lj, t, cue(1) + 2.6, { dy: 16 }); show(ljf, t, cue(2) + .6, { dy: 16 });
+      show(la, t, cue(4) - .4, { back: true, s: .7 });
+      show(inp, t, cue(3) + 1.5, { dy: 20 }); show(warn, t, cue(5), { dy: 20 });
+      wb(t);
+    };
+  },
+  solar(root, sc, cue) {
+    const hd = roundHead(root, sc);
+    const sun = el('div', 'abs', icon('sun', 170, '#FFC857', 3), root, 'left:875px;top:210px');
+    const panel = el('div', 'abs', `<svg width="300" height="160" viewBox="0 0 300 160"><path d="M40 20h220l30 110H10z" fill="#12243a" stroke="#3a6ea5" stroke-width="3"/>${[1, 2, 3].map(i => `<line x1="${40 + i * 55}" y1="20" x2="${10 + i * 70}" y2="130" stroke="#3a6ea5" stroke-width="2"/>`).join('')}<line x1="25" y1="75" x2="275" y2="75" stroke="#3a6ea5" stroke-width="2"/><rect x="140" y="130" width="20" height="26" fill="#2b2f36"/></svg>`, root, 'left:810px;top:400px');
+    const flow = el('div', 'abs', `<svg width="1680" height="300"><path id="fl" d="M840 150 C 640 150, 520 200, 420 230" stroke="#FFC857" stroke-width="6" fill="none" stroke-dasharray="4 22" stroke-linecap="round"/><path id="fr" d="M840 150 C 1040 150, 1160 200, 1260 230" stroke="#FFC857" stroke-width="6" fill="none" stroke-dasharray="4 22" stroke-linecap="round"/></svg>`, root, 'left:120px;top:420px');
+    const cards = [0, 1].map(i => {
+      const c = el('div', 'card abs', '', root, `left:${i ? 1250 : 120}px;top:260px;width:550px;height:570px;border-color:${i ? 'rgba(39,184,255,.25)' : 'rgba(255,138,31,.25)'}`);
+      el('div', 'lbl', i ? '<span class="a">Anker SOLIX C300 DC</span>' : '<span class="j">Jackery Explorer 300</span>', c, 'position:absolute;left:36px;top:30px');
+      const rows = [
+        [`<span class="num" style="font-size:72px;color:${i ? 'var(--a)' : 'var(--j)'}">${sc.watts[i]} W</span>`, 'max solar input (MPPT)'],
+        [`<span class="num" style="font-size:56px">${sc.hours[i]}</span>`, 'full recharge, 100 W panel, good sun'],
+        [`<span class="row" style="gap:12px">${icon('car', 44, 'var(--ink)')}${CHECK()}</span>`, '12V car charging'],
+        [`<span class="h2" style="font-size:36px">${i ? 'XT60' : '8mm DC'}</span>`, 'solar connector'],
+      ].map(([v, l], k) => el('div', 'abs', `${v}<div style="font-size:22px;color:var(--dim);margin-top:2px">${l}</div>`, c, `left:36px;top:${80 + k * 118}px`));
+      return { c, rows };
+    });
+    const wb = winnerBanner(root, sc, cue);
+    return t => {
+      hd(t);
+      show(sun, t, 1.9, { s: .5, dy: 0 }); sun.firstChild.style.transform = `rotate(${t * 12}deg)`;
+      show(panel, t, 2.2, { dy: 30 });
+      flow.style.opacity = ease(P(t, cue(1), .8));
+      flow.querySelectorAll('path').forEach(p => p.setAttribute('stroke-dashoffset', -t * 40));
+      cards.forEach(({ c, rows }, i) => {
+        show(c, t, 2 + i * .2, { dx: i ? 60 : -60, dy: 0 });
+        show(rows[0], t, cue(1) + .8 + i * .3, { dy: 16 }); show(rows[1], t, cue(2) + (i ? 1.8 : .8), { dy: 16 });
+        show(rows[2], t, cue(3) + .3 + i * .3, { dy: 16 }); show(rows[3], t, cue(4) + .3, { dy: 16 });
+      });
+      wb(t);
+    };
+  },
+  weight(root, sc, cue) {
+    const hd = roundHead(root, sc);
+    const box = el('div', 'card abs', '', root, 'left:120px;top:230px;width:1680px;height:610px');
+    const S = 38;  // px per inch, true proportions
+    const jW = 9.1 * S, jH = 7.8 * S, aW = 4.9 * S, aH = 7.9 * S, base = 470;
+    const dj = el('div', 'abs', `<div style="width:${jW}px;height:${jH}px;border-radius:26px;background:linear-gradient(#4a4e56,#2a2d33);position:relative;box-shadow:inset 0 0 0 2px rgba(255,138,31,.6)"><div style="position:absolute;left:18%;right:18%;top:-26px;height:34px;border-radius:17px 17px 0 0;background:#E8781A"></div><div class="h2 j" style="position:absolute;width:100%;top:40%;text-align:center;font-size:34px">Jackery</div></div>`, box, `left:140px;top:${base - jH}px`);
+    const da = el('div', 'abs', `<div style="width:${aW}px;height:${aH}px;border-radius:26px;background:linear-gradient(90deg,#2a2d33,#40444c,#26292e);position:relative;box-shadow:inset 0 0 0 2px rgba(39,184,255,.6)"><div style="position:absolute;left:22%;right:22%;top:-24px;height:30px;border-radius:15px 15px 0 0;border:8px solid #2c2f35;border-bottom:0"></div><div class="h2 a" style="position:absolute;width:100%;top:40%;text-align:center;font-size:30px">Anker</div></div>`, box, `left:${140 + jW + 90}px;top:${base - aH}px`);
+    const dimj = el('div', 'abs lbl', sc.dims[0], box, `left:140px;top:${base + 22}px;width:${jW}px;text-align:center;font-size:20px;color:var(--j)`);
+    const dima = el('div', 'abs lbl', sc.dims[1], box, `left:${140 + jW + 40}px;top:${base + 22}px;width:${aW + 100}px;text-align:center;font-size:20px;color:var(--a)`);
+    const wx = 1000;
+    el('div', 'abs lbl', 'Weight', box, `left:${wx}px;top:60px`);
+    const wbars = [0, 1].map(i => {
+      const b = el('div', 'bar abs', '<i></i>', box, `left:${wx}px;top:${110 + i * 120}px;width:560px`);
+      b.firstChild.style.background = i ? 'linear-gradient(90deg,#0d6fa0,#27B8FF)' : 'linear-gradient(90deg,#b3560a,#FF8A1F)';
+      const v = el('div', 'abs num', '', b, `left:24px;top:8px;font-size:40px;color:#fff`);
+      return { b, v };
+    });
+    const half = el('div', 'abs', `<div class="num" style="font-size:88px;line-height:1"><span class="a">≈ ½</span></div><div style="font-size:28px;color:var(--dim);margin-top:8px">the volume of the Jackery<br>(~182 vs ~369 cubic inches)</div>`, box, `left:${wx}px;top:370px`);
+    const wb = winnerBanner(root, sc, cue);
+    return t => {
+      hd(t); show(box, t, 1.8, { dy: 40 });
+      show(dj, t, cue(1), { dy: 60 }); show(dimj, t, cue(1) + 1.2, { dy: 10 });
+      show(da, t, cue(2), { dy: 60 }); show(dima, t, cue(3) + .2, { dy: 10 });
+      sc.weights.forEach((w, i) => {
+        const p = easeIO(P(t, cue(i + 1) + .5, 1.2));
+        wbars[i].b.firstChild.style.width = (p * w / 8 * 100) + '%';
+        wbars[i].v.textContent = p > .02 ? (p * w).toFixed(1) + ' lb' : '';
+      });
+      show(half, t, cue(3) + 1.5, { back: true, s: .8 });
+        wb(t);
+    };
+  },
+  runtime(root, sc, cue) {
+    const hd = roundHead(root, sc);
+    const ICON = ['phone', 'laptop', 'fridge', 'bulb', 'tv'];
+    const tb = el('table', 't abs', `<tr><th style="text-align:left;color:var(--dim)">Device</th><th class="j">Jackery 300</th><th class="a">Anker C300 DC</th></tr>` +
+      sc.devices.map(([d, j, a], i) => `<tr><td><span class="row">${icon(ICON[i], 42, 'var(--ink)')}${d}</span></td><td class="tc num" style="font-size:34px">${j}</td><td class="tc num" style="font-size:34px;${a.startsWith('Not') ? 'color:var(--no)' : ''}">${a.startsWith('Not') ? CROSS('var(--no)', 36) + ' ' : ''}${a}</td></tr>`).join(''), root, 'left:120px;top:235px;width:1680px');
+    const rows = [...tb.querySelectorAll('tr')];
+    const note = el('div', 'abs', 'Estimates after conversion losses · results vary by device and conditions', root, 'left:120px;top:800px;font-size:22px;color:var(--dim)');
+    const wb = winnerBanner(root, sc, cue);
+    return t => {
+      hd(t);
+      show(rows[0], t, 1.9, { dy: 10 });
+      [0, 1, 2, 3].forEach(i => show(rows[i + 1], t, cue(1) + .4 + i * 1.5, { dx: -40, dy: 0 }));
+      show(rows[5], t, cue(3) + .5, { dx: -40, dy: 0 });
+      show(note, t, cue(4), { dy: 10 });
+      wb(t);
+    };
+  },
+  features(root, sc, cue) {
+    const hd = roundHead(root, sc);
+    const good = v => /^(Yes|Pop-out|3 years)/.test(v), bad = v => /^(No)/.test(v);
+    const cell = v => `${good(v) ? CHECK('var(--win)', 36) : bad(v) ? CROSS('var(--no)', 36) : ''}<span>${v}</span>`;
+    const tb = el('table', 't abs', `<tr><th style="text-align:left;color:var(--dim)">Feature</th><th class="j">Jackery 300</th><th class="a">Anker C300 DC</th></tr>` +
+      sc.rows.map(([f, j, a]) => `<tr><td>${f}</td><td><span class="row" style="justify-content:center;gap:12px">${cell(j)}</span></td><td><span class="row" style="justify-content:center;gap:12px">${cell(a)}</span></td></tr>`).join(''), root, 'left:120px;top:235px;width:1680px');
+    const rows = [...tb.querySelectorAll('tr')];
+    const wb = winnerBanner(root, sc, cue);
+    // Row order vs narration: light(2), AC(—), pass-through(3), connector(—), warranty(4).
+    const at = [cue(2), cue(1) + .8, cue(3), cue(2) + 2.5, cue(4)];
+    return t => {
+      hd(t); show(rows[0], t, 1.9, { dy: 10 });
+      at.forEach((a, i) => show(rows[i + 1], t, a, { dx: -40, dy: 0 }));
+      wb(t);
+    };
+  },
+  value(root, sc, cue) {
+    const hd = roundHead(root, sc);
+    const tags = [0, 1].map(i => {
+      const c = i ? 'var(--a)' : 'var(--j)';
+      const e = el('div', 'abs card', `<div class="lbl" style="color:${c}">${i ? 'Anker SOLIX C300 DC' : 'Jackery Explorer 300'}</div><div class="row" style="margin-top:22px">${icon('tag', 64, c)}<div><div class="num" style="font-size:70px;line-height:1">${i ? '~$150' : 'Usually more'}</div><div style="font-size:24px;color:var(--dim);margin-top:6px">${i ? 'often seen recently' : 'than the C300 DC'}</div></div></div>`, root, `left:${i ? 1000 : 120}px;top:240px;width:800px;height:250px;padding:40px`);
+      return e;
+    });
+    const cyc = el('div', 'abs card', '', root, 'left:120px;top:520px;width:1680px;height:230px;padding:36px 40px');
+    el('div', 'lbl', 'Rated cycles per dollar, at the same price', cyc);
+    const cb = [0, 1].map(i => {
+      const b = el('div', 'bar abs', '<i></i>', cyc, `left:40px;top:${86 + i * 72}px;width:1200px;height:52px`);
+      b.firstChild.style.background = i ? 'linear-gradient(90deg,#0d6fa0,#27B8FF)' : 'linear-gradient(90deg,#b3560a,#FF8A1F)';
+      return b;
+    });
+    const six = el('div', 'abs num a', '6× more', cyc, 'left:1290px;top:118px;font-size:64px');
+    const ac = el('div', 'abs chip', `${icon('plug', 32, 'var(--j)')} The Jackery's premium buys real AC outlets`, root, 'left:120px;top:778px;font-size:24px');
+    const wb = winnerBanner(root, sc, cue);
+    return t => {
+      hd(t);
+      show(tags[1], t, cue(1) + .6, { dy: 40 }); show(tags[0], t, cue(1) + 2.6, { dy: 40 });
+      show(cyc, t, cue(2), { dy: 30 });
+      [1, 6].forEach((v, i) => cb[i].firstChild.style.width = (easeIO(P(t, cue(2) + .8 + i * .6, 1.4)) * v / 6.3 * 100) + '%');
+      show(six, t, cue(2) + 2.6, { back: true, s: .7, dy: 0 });
+      show(ac, t, cue(3), { dy: 20 });
+      wb(t);
+    };
+  },
+  scorecard(root, sc, cue) {
+    const title = el('div', 'abs h1 tc', 'FINAL SCORECARD', root, 'left:0;width:1920px;top:120px;font-size:72px');
+    const tiles = sc.rounds.map(([n, w], i) => {
+      const col = w == null ? 'rgba(255,255,255,.3)' : w ? 'var(--a)' : 'var(--j)';
+      const e = el('div', 'abs card tc', `<div class="lbl" style="font-size:16px">Round ${i + 1}</div><div class="h2" style="font-size:30px;margin-top:8px">${n}</div><div class="wn h2" style="font-size:24px;margin-top:14px;color:${col}">${w == null ? 'TIE' : w ? 'ANKER' : 'JACKERY'}</div>`, root,
+        `left:${120 + (i % 5) * 344}px;top:${250 + Math.floor(i / 5) * 200}px;width:312px;height:170px;padding-top:28px;border-radius:24px`);
+      e._col = col; return e;
+    });
+    const sj = el('div', 'abs num j tc', '2', root, 'left:560px;top:670px;width:200px;font-size:150px;line-height:1');
+    const dash = el('div', 'abs num tc', ':', root, 'left:860px;top:670px;width:200px;font-size:130px;color:var(--dim);line-height:1');
+    const sa = el('div', 'abs num a tc', '6', root, 'left:1160px;top:670px;width:200px;font-size:150px;line-height:1');
+    const lj = el('div', 'abs lbl tc j', 'Jackery', root, 'left:560px;top:830px;width:200px');
+    const la = el('div', 'abs lbl tc a', 'Anker', root, 'left:1160px;top:830px;width:200px');
+    const ties = el('div', 'abs chip', '2 ties', root, 'left:890px;top:830px;font-size:22px;padding:8px 18px');
+    // Tile order in narration: Jackery wins (1,3), Anker wins, ties.
+    const order = [0, 2, 1, 3, 4, 6, 8, 9, 5, 7];
+    return t => {
+      show(title, t, .2, { dy: 30 });
+      order.forEach((k, i) => {
+        const at = i < 2 ? cue(1) + .5 + i * .9 : i < 8 ? cue(2) + .4 + (i - 2) * .7 : cue(3) + (i - 8) * .6;
+        const e = tiles[k], p = show(e, t, at, { back: true, s: .7, dy: 20 });
+        e.style.borderColor = p > .2 ? e._col : 'rgba(255,255,255,.09)';
+      });
+      [sj, dash, sa, lj, la, ties].forEach((e, i) => show(e, t, cue(4) + i * .12, { back: true, s: .6 }));
+      const hi = ease(P(t, cue(5), .6));
+      tiles[2].style.boxShadow = `0 0 ${80 * hi}px rgba(255,138,31,${.6 * hi})`;
+      tiles[2].style.transform += ` scale(${1 + .06 * hi})`;
+    };
+  },
+  verdict(root, sc, cue) {
+    const title = el('div', 'abs h1 tc', 'WHICH ONE SHOULD YOU BUY?', root, 'left:0;width:1920px;top:120px;font-size:64px');
+    const cols = [0, 1].map(i => {
+      const c = el('div', 'abs card', '', root, `left:${i ? 990 : 120}px;top:240px;width:810px;height:560px;padding:44px;border-color:${i ? 'var(--a)' : 'var(--j)'}`);
+      el('div', 'h2', `Get the <span class="${i ? 'a' : 'j'}">${i ? 'Anker C300 DC' : 'Jackery 300'}</span> if…`, c, 'font-size:44px');
+      const art = el('div', 'abs', i ? ankerSVG(120) : jackerySVG(190), c, `right:40px;bottom:36px;opacity:.9`);
+      const bullets = sc.picks[i].map((b, k) => el('div', 'row', `${CHECK(i ? 'var(--a)' : 'var(--j)', 40)}<span style="font-size:32px;font-weight:600">${b}</span>`, c, 'margin-top:38px'));
+      return { c, bullets };
+    });
+    const bot = el('div', 'abs row', `<span class="chip">Travel & everyday carry → <span class="a">Anker</span></span><span class="chip">AC backup power → <span class="j">Jackery</span></span>`, root, 'left:50%;top:840px;gap:30px');
+    return t => {
+      show(title, t, .2, { dy: 30 });
+      cols.forEach(({ c, bullets }, i) => {
+        show(c, t, i ? cue(3) - .6 : .8, { dy: 50 });
+        bullets.forEach((b, k) => show(b, t, (i ? cue(3) : cue(1)) + .3 + k * (i ? 1.6 : 1.8), { dx: -30, dy: 0 }));
+      });
+      show(bot, t, cue(-2), { dy: 20, base: 'translateX(-50%)' });
+    };
+  },
+  outro(root, sc, cue) {
+    const q = el('div', 'abs h1 tc', 'Which one would <span class="a">you</span> pick?', root, 'left:0;width:1920px;top:200px;font-size:92px');
+    const cm = el('div', 'abs row', `${icon('chat', 60, 'var(--ink)')}<span style="font-size:36px;font-weight:600">Tell us in the comments</span>`, root, 'left:50%;top:360px');
+    const links = el('div', 'abs chip', `${icon('tag', 32, 'var(--win)')} Links to both in the description`, root, 'left:50%;top:470px');
+    const like = el('div', 'abs', `<div class="row" style="gap:28px"><div class="like chip" style="font-size:32px;padding:18px 34px">${icon('thumb', 40, 'var(--ink)')} Like</div><div class="sub chip" style="font-size:32px;padding:18px 40px;background:#FF3B3B;border-color:#FF3B3B">SUBSCRIBE</div></div>`, root, 'left:50%;top:600px');
+    const cur = el('div', 'abs', `<svg width="44" height="56" viewBox="0 0 22 28"><path d="M2 2v22l6-6 4 9 4-2-4-9h8z" fill="#fff" stroke="#000" stroke-width="1.5"/></svg>`, root, 'left:0;top:0');
+    const lock = el('div', 'abs h1 tc', '<span class="j">JACKERY 300</span> <span style="color:var(--dim)">vs</span> <span class="a">ANKER C300 DC</span>', root, 'left:0;width:1920px;top:800px;font-size:44px');
+    const likeB = like.querySelector('.like'), subB = like.querySelector('.sub');
+    return t => {
+      show(q, t, .2, { dy: 40 }); show(cm, t, .9, { dy: 20, base: 'translateX(-50%)' });
+      show(links, t, cue(2), { dy: 20, base: 'translateX(-50%)' });
+      show(like, t, cue(3), { dy: 20, base: 'translateX(-50%)' });
+      // Cursor path: enter → like (click) → subscribe (click).
+      const lr = { x: 790, y: 640 }, sr = { x: 1070, y: 640 }, c0 = cue(3) + .4;
+      const p1 = easeIO(P(t, c0, .9)), p2 = easeIO(P(t, c0 + 1.5, .8));
+      let x = lerp(1500, lr.x, p1), y = lerp(1000, lr.y, p1); x = lerp(x, sr.x, p2); y = lerp(y, sr.y, p2);
+      cur.style.transform = `translate(${x}px,${y}px)`; cur.style.opacity = clamp(P(t, c0, .3));
+      const liked = t > c0 + 1.05, subbed = t > c0 + 2.45;
+      likeB.style.background = liked ? 'rgba(61,220,151,.2)' : ''; likeB.style.borderColor = liked ? 'var(--win)' : '';
+      subB.style.background = subbed ? '#2a2f3a' : '#FF3B3B'; subB.style.borderColor = subbed ? '#2a2f3a' : '#FF3B3B';
+      subB.textContent = subbed ? 'SUBSCRIBED ✓' : 'SUBSCRIBE';
+      const press = (a) => 1 - .08 * Math.sin(Math.PI * clamp((t - a) / .2));
+      likeB.style.transform = `scale(${press(c0 + .95)})`; subB.style.transform = `scale(${press(c0 + 2.35)})`;
+      show(lock, t, cue(-1), { dy: 20 });
+    };
+  },
+};
+
+/* ---------------------------------------------------------- background */
+const parts = document.getElementById('parts').getContext('2d');
+const SEEDS = Array.from({ length: 70 }, (_, i) => { const r = k => { const x = Math.sin(i * 127.1 + k * 311.7) * 43758.5453; return x - Math.floor(x); }; return [r(1), r(2), r(3), r(4)]; });
+function drawBg(t) {
+  $('#glowJ').style.background = `radial-gradient(900px 700px at ${480 + Math.sin(t * .13) * 120}px ${560 + Math.cos(t * .11) * 80}px, rgba(255,138,31,.16), transparent 70%)`;
+  $('#glowA').style.background = `radial-gradient(900px 700px at ${1540 + Math.cos(t * .12) * 120}px ${520 + Math.sin(t * .1) * 90}px, rgba(39,184,255,.16), transparent 70%)`;
+  $('#grid').style.backgroundPosition = `${(t * 6) % 80}px ${(t * 10) % 80}px`;
+  parts.clearRect(0, 0, W, H);
+  for (const [a, b, c, d] of SEEDS) {
+    const y = (b * H - t * (12 + c * 30)) % H, yy = y < 0 ? y + H : y;
+    const x = a * W + Math.sin(t * .5 + d * 6) * 20;
+    parts.fillStyle = a < .5 ? `rgba(255,170,90,${.10 + c * .18})` : `rgba(120,200,255,${.10 + c * .18})`;
+    parts.beginPath(); parts.arc(x, yy, 1 + d * 2.5, 0, 6.283); parts.fill();
+  }
+}
+
+/* --------------------------------------------------------------- setup */
+function init(timeline) {
+  TL = timeline;
+  const host = $('#scenes');
+  for (let i = 1; i <= 10; i++) el('i', '', '', $('#dots'));
+  TL.scenes.forEach(sc => {
+    const root = el('div', 'scene', '', host);
+    const cue = cueFn(sc);
+    root.style.display = 'block';
+    const upd = BUILD[sc.kind](root, sc, cue);
+    root.style.display = 'none';
+    SC.push({ sc, root, upd, caps: buildCaptions(sc) });
+  });
+}
+let cur = -1;
+function renderAt(t) {
+  drawBg(t);
+  let i = SC.findIndex(s => t >= s.sc.start && t < s.sc.start + s.sc.dur);
+  if (i < 0) i = t < 0 ? 0 : SC.length - 1;
+  if (i !== cur) { if (cur >= 0) SC[cur].root.style.display = 'none'; SC[i].root.style.display = 'block'; cur = i; }
+  const { sc, root, upd, caps } = SC[i], lt = t - sc.start;
+  const fin = ease(P(lt, 0, .45)), fout = ease(P(lt, sc.dur - .4, .4));
+  root.style.opacity = fin * (1 - fout);
+  root.style.transform = `scale(${1.015 - .015 * fin + .01 * fout})`;
+  upd(lt, sc.dur);
+  // Captions
+  const c = caps.find(c => lt >= c.start - .05 && lt < c.end + .25);
+  const capEl = $('#cap');
+  capEl.style.opacity = c ? 1 : 0;
+  if (c && capEl.textContent !== c.text) capEl.textContent = c.text;
+  // HUD: round dots + live score
+  let sj = 0, sa = 0, curRound = 0;
+  SC.forEach(({ sc: s }) => {
+    if (s.round && t >= s.start) curRound = s.round;
+    if (s.round && s._winAt != null && t >= s.start + s._winAt + .3) { if (s.winner === 0) sj++; if (s.winner === 1) sa++; }
+  });
+  $('#sj').textContent = sj; $('#sa').textContent = sa;
+  [...$('#dots').children].forEach((d, k) => {
+    d.style.background = k + 1 < curRound ? 'rgba(255,255,255,.55)' : k + 1 === curRound && sc.round ? '#fff' : 'rgba(255,255,255,.14)';
+    d.style.transform = k + 1 === curRound && sc.round ? 'scale(1.35)' : 'none';
+  });
+  const hudOn = sc.kind !== 'intro' ? 1 : ease(P(lt, sc.dur - 2, 1));
+  ['#dots', '#score'].forEach(s => $(s).style.opacity = hudOn);
+  $('#prog').style.width = (t / TL.total * 100) + '%';
+}
+window.init = init;
+window.renderAt = renderAt;
+if (window.TIMELINE) { init(window.TIMELINE); renderAt(window.START_T || 0); }
+</script>
+</body>
+</html>

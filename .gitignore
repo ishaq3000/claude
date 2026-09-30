@@ -1,0 +1,9 @@
+node_modules/
+brag-output/work/chunks/
+brag-output/work/stills/
+brag-output/work/sheet*.jpg
+brag-output/work/video.mp4
+brag-output/work/mix.m4a
+brag-output/work/render.log
+brag-output/work/stilltimes.txt
+brag-output/work/t2.txt
